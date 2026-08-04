@@ -33,7 +33,7 @@ vim.o.splitbelow = true
 vim.o.signcolumn = 'yes'
 vim.o.cursorline = true
 vim.o.showmode = false -- already in the statusline
-vim.o.winborder = 'rounded'
+vim.o.winborder = 'none'
 vim.opt.colorcolumn = { 121 }
 vim.o.list = true
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
@@ -78,10 +78,10 @@ vim.diagnostic.config {
   virtual_text = true,
   signs = vim.g.have_nerd_font and {
     text = {
-      [vim.diagnostic.severity.ERROR] = '󰅚 ',
-      [vim.diagnostic.severity.WARN] = '󰀪 ',
-      [vim.diagnostic.severity.INFO] = '󰋽 ',
-      [vim.diagnostic.severity.HINT] = '󰌶 ',
+      [vim.diagnostic.severity.ERROR] = '',
+      [vim.diagnostic.severity.WARN] = '',
+      [vim.diagnostic.severity.HINT] = '',
+      [vim.diagnostic.severity.INFO] = '',
     },
   } or true,
   -- Show the message when jumping with [d / ]d
@@ -122,7 +122,7 @@ vim.pack.add {
   gh 'mason-org/mason.nvim',
   gh 'mason-org/mason-lspconfig.nvim',
   gh 'rluba/jai.vim',
-  { src = gh 'saghen/blink.cmp', version = vim.version.range '1.*' },
+  { src = gh 'saghen/blink.cmp',                version = vim.version.range '1.*' },
   { src = gh 'nvim-treesitter/nvim-treesitter', version = 'main' },
 }
 
@@ -134,10 +134,10 @@ vim.cmd.colorscheme 'gruvbox'
 -- [[ mini.nvim modules ]]
 require('mini.icons').setup()
 MiniIcons.mock_nvim_web_devicons()
-require('mini.surround').setup() -- saiw) sd' sr)'
+require('mini.surround').setup()           -- saiw) sd' sr)'
 require('mini.ai').setup { n_lines = 500 } -- va) ci' yi]
 require('mini.pick').setup()
-require('mini.extra').setup() -- extra pickers, registered into :Pick
+require('mini.extra').setup()              -- extra pickers, registered into :Pick
 vim.ui.select = MiniPick.ui_select
 
 -- Detect a file's indentation on open and override the defaults above.
@@ -177,7 +177,10 @@ local function open_file_globs()
   local globs = {}
   for _, buf in ipairs(vim.api.nvim_list_bufs()) do
     local name = vim.api.nvim_buf_get_name(buf)
-    if vim.bo[buf].buflisted and name ~= '' and vim.uv.fs_stat(name) then table.insert(globs, vim.fn.fnamemodify(name, ':.')) end
+    if vim.bo[buf].buflisted and name ~= '' and vim.uv.fs_stat(name) then
+      table.insert(globs,
+        vim.fn.fnamemodify(name, ':.'))
+    end
   end
   return globs
 end
@@ -188,16 +191,20 @@ map('n', '<leader>sg', pick.grep_live, { desc = '[S]earch by [G]rep' })
 map('n', '<leader>sh', pick.help, { desc = '[S]earch [H]elp' })
 map('n', '<leader>sr', pick.resume, { desc = '[S]earch [R]esume' })
 map('n', '<leader><leader>', pick.buffers, { desc = '[ ] Find existing buffers' })
-map({ 'n', 'x' }, '<leader>sw', function() pick.grep { pattern = search_seed() } end, { desc = '[S]earch current [W]ord' })
-map('n', '<leader>s/', function() pick.grep_live { globs = open_file_globs() } end, { desc = '[S]earch [/] in open files' })
+map({ 'n', 'x' }, '<leader>sw', function() pick.grep { pattern = search_seed() } end,
+  { desc = '[S]earch current [W]ord' })
+map('n', '<leader>s/', function() pick.grep_live { globs = open_file_globs() } end,
+  { desc = '[S]earch [/] in open files' })
 map('n', '<leader>sk', extra.keymaps, { desc = '[S]earch [K]eymaps' })
 map('n', '<leader>sc', extra.commands, { desc = '[S]earch [C]ommands' })
 -- `scope = 'current'` limits this to the current buffer; the default 'all' also picks up
 -- diagnostics the LSP published for files that were never opened (headers, other TUs).
 map('n', '<leader>sd', function() extra.diagnostic { scope = 'current' } end, { desc = '[S]earch [D]iagnostics' })
 map('n', '<leader>s.', extra.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
-map('n', '<leader>/', function() extra.buf_lines { scope = 'current' } end, { desc = '[/] Fuzzily search in current buffer' })
-map('n', '<leader>sn', function() pick.files(nil, { source = { cwd = vim.fn.stdpath 'config' } } ) end, { desc = '[S]earch [N]eovim config files' })
+map('n', '<leader>/', function() extra.buf_lines { scope = 'current' } end,
+  { desc = '[/] Fuzzily search in current buffer' })
+map('n', '<leader>sn', function() pick.files(nil, { source = { cwd = vim.fn.stdpath 'config' } }) end,
+  { desc = '[S]earch [N]eovim config files' })
 
 -- Pick a picker (like Telescope's builtin picker).
 map('n', '<leader>ss', function()
@@ -252,7 +259,9 @@ vim.api.nvim_create_autocmd('LspAttach', {
     end
 
     if client and client:supports_method('textDocument/inlayHint', event.buf) then
-      bmap('<leader>th', function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }) end, '[T]oggle Inlay [H]ints')
+      bmap('<leader>th',
+        function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }) end,
+        '[T]oggle Inlay [H]ints')
     end
   end,
 })
@@ -320,7 +329,10 @@ vim.api.nvim_create_autocmd('FileType', {
     local lang = vim.treesitter.language.get_lang(args.match)
     if not lang or not vim.treesitter.language.add(lang) then return end
     vim.treesitter.start(args.buf, lang)
-    if vim.treesitter.query.get(lang, 'indents') then vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()" end
+    if vim.treesitter.query.get(lang, 'indents') then
+      vim.bo[args.buf].indentexpr =
+      "v:lua.require'nvim-treesitter'.indentexpr()"
+    end
   end,
 })
 
