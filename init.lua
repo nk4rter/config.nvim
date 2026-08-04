@@ -192,7 +192,9 @@ map({ 'n', 'x' }, '<leader>sw', function() pick.grep { pattern = search_seed() }
 map('n', '<leader>s/', function() pick.grep_live { globs = open_file_globs() } end, { desc = '[S]earch [/] in open files' })
 map('n', '<leader>sk', extra.keymaps, { desc = '[S]earch [K]eymaps' })
 map('n', '<leader>sc', extra.commands, { desc = '[S]earch [C]ommands' })
-map('n', '<leader>sd', extra.diagnostic, { desc = '[S]earch [D]iagnostics' })
+-- `scope = 'current'` limits this to the current buffer; the default 'all' also picks up
+-- diagnostics the LSP published for files that were never opened (headers, other TUs).
+map('n', '<leader>sd', function() extra.diagnostic { scope = 'current' } end, { desc = '[S]earch [D]iagnostics' })
 map('n', '<leader>s.', extra.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
 map('n', '<leader>/', function() extra.buf_lines { scope = 'current' } end, { desc = '[/] Fuzzily search in current buffer' })
 map('n', '<leader>sn', function() pick.files(nil, { source = { cwd = vim.fn.stdpath 'config' } } ) end, { desc = '[S]earch [N]eovim config files' })
