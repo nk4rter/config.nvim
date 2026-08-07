@@ -25,7 +25,6 @@ vim.o.confirm = true -- ask to save instead of failing on :q with changes
 vim.o.tabstop = 4
 vim.o.shiftwidth = 4
 vim.o.expandtab = true
-vim.o.breakindent = true
 
 vim.o.splitright = true
 vim.o.splitbelow = true
@@ -33,7 +32,7 @@ vim.o.splitbelow = true
 vim.o.signcolumn = 'yes'
 vim.o.cursorline = true
 vim.o.showmode = false -- already in the statusline
--- vim.o.winborder = 'none'
+vim.o.winborder = 'rounded'
 vim.opt.colorcolumn = { 121 }
 vim.o.list = true
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
@@ -191,10 +190,10 @@ require('which-key').setup {
   delay = 0,
   icons = { mappings = vim.g.have_nerd_font },
   spec = {
-    { '<leader>s', group = '[S]earch', mode = { 'n', 'x' } },
+    { '<leader>s', group = '[S]earch',   mode = { 'n', 'x' } },
     { '<leader>t', group = '[T]oggle' },
     { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'x' } },
-    { 'gr', group = 'LSP Actions' },
+    { 'gr',        group = 'LSP Actions' },
   },
 }
 require('lualine').setup { options = { theme = 'powerline' } }
@@ -214,14 +213,9 @@ local extra = MiniExtra.pickers
 
 ---Text to seed a search with: visual selection in visual mode, else <cword>.
 local function search_seed()
-  if vim.fn.mode():match '[vV\22]' then
-    local save = vim.fn.getreg 'z'
-    vim.cmd 'noautocmd normal! "zy'
-    local sel = vim.fn.getreg 'z'
-    vim.fn.setreg('z', save)
-    return (sel:gsub('\n.*', ''))
-  end
-  return vim.fn.expand '<cword>'
+  local mode = vim.fn.mode()
+  if not mode:match '[vV\22]' then return vim.fn.expand '<cword>' end
+  return vim.fn.getregion(vim.fn.getpos '.', vim.fn.getpos 'v', { type = mode })[1]
 end
 
 ---Paths of listed, on-disk buffers, relative to cwd (used as ripgrep globs).
@@ -285,11 +279,12 @@ vim.api.nvim_create_autocmd('LspAttach', {
     bmap('grn', vim.lsp.buf.rename, '[R]e[n]ame')
     bmap('gra', vim.lsp.buf.code_action, 'Code [A]ction', { 'n', 'x' })
     bmap('grD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
-    bmap('grd', function() extra.lsp { scope = 'definition' } end, '[G]oto [D]efinition')
+    bmap('grd', vim.lsp.buf.definition, '[G]oto [D]efinition')
     bmap('grr', function() extra.lsp { scope = 'references' } end, '[G]oto [R]eferences')
     bmap('gri', function() extra.lsp { scope = 'implementation' } end, '[G]oto [I]mplementation')
-    bmap('grt', function() extra.lsp { scope = 'type_definition' } end, '[G]oto [T]ype Definition')
-    bmap('gO', function() extra.lsp { scope = 'document_symbol' } end, 'Document Symbols')
+    bmap('grt', vim.lsp.buf.type_definition, '[G]oto [T]ype Definition')
+    bmap('gO', function() extra.lsp { scope = 'document_symbol' } end, '[O]pen Document Symbols')
+
     bmap('gW', function() extra.lsp { scope = 'workspace_symbol_live' } end, 'Workspace Symbols')
     bmap('<leader>f', function() vim.lsp.buf.format { async = true } end, '[F]ormat buffer', { 'n', 'x' })
 
@@ -362,7 +357,7 @@ require('blink.cmp').setup {
   -- See `:help ins-completion` and `:help blink-cmp-config-keymap`.
   keymap = { preset = 'default' },
   appearance = { nerd_font_variant = 'mono' },
-  completion = { documentation = { auto_show = false, auto_show_delay_ms = 500 } },
+  completion = { documentation = { auto_show = false } },
   sources = { default = { 'lsp', 'path', 'snippets', 'buffer' } },
   fuzzy = { implementation = 'prefer_rust_with_warning' },
   signature = { enabled = true },
