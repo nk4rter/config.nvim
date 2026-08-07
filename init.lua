@@ -187,7 +187,6 @@ require('fidget').setup {} -- LSP progress in the corner
 -- Popup listing what can follow a half-typed key sequence. Groups below just give
 -- the prefixes a readable label; every other entry comes from the keymap `desc`s.
 require('which-key').setup {
-  delay = 0,
   icons = { mappings = vim.g.have_nerd_font },
   spec = {
     { '<leader>s', group = '[S]earch',   mode = { 'n', 'x' } },
