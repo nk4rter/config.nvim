@@ -144,7 +144,45 @@ vim.ui.select = MiniPick.ui_select
 -- Detect a file's indentation on open and override the defaults above.
 require('guess-indent').setup {}
 
-require('gitsigns').setup {}
+-- Git signs in the gutter, plus hunk staging/reset/preview under `<leader>h`.
+-- Keymaps are buffer-local so they only exist in files gitsigns actually attached to.
+require('gitsigns').setup {
+  on_attach = function(bufnr)
+    local gs = require 'gitsigns'
+    local function gmap(mode, lhs, rhs, desc) map(mode, lhs, rhs, { buffer = bufnr, desc = desc }) end
+
+    -- Navigation: fall back to the builtin diff-mode ]c/[c when in a diff.
+    gmap('n', ']c', function()
+      if vim.wo.diff then vim.cmd.normal { ']c', bang = true } else gs.nav_hunk 'next' end
+    end, 'Jump to next git [c]hange')
+    gmap('n', '[c', function()
+      if vim.wo.diff then vim.cmd.normal { '[c', bang = true } else gs.nav_hunk 'prev' end
+    end, 'Jump to previous git [c]hange')
+
+    -- Actions
+    gmap('x', '<leader>hs', function() gs.stage_hunk { vim.fn.line '.', vim.fn.line 'v' } end, 'git [s]tage hunk')
+    gmap('x', '<leader>hr', function() gs.reset_hunk { vim.fn.line '.', vim.fn.line 'v' } end, 'git [r]eset hunk')
+    gmap('n', '<leader>hs', gs.stage_hunk, 'git [s]tage hunk')
+    gmap('n', '<leader>hr', gs.reset_hunk, 'git [r]eset hunk')
+    gmap('n', '<leader>hS', gs.stage_buffer, 'git [S]tage buffer')
+    gmap('n', '<leader>hR', gs.reset_buffer, 'git [R]eset buffer')
+    gmap('n', '<leader>hp', gs.preview_hunk, 'git [p]review hunk')
+    gmap('n', '<leader>hi', gs.preview_hunk_inline, 'git preview hunk [i]nline')
+    gmap('n', '<leader>hb', function() gs.blame_line { full = true } end, 'git [b]lame line')
+    gmap('n', '<leader>hd', gs.diffthis, 'git [d]iff against index')
+    gmap('n', '<leader>hD', function() gs.diffthis '@' end, 'git [D]iff against last commit')
+    gmap('n', '<leader>hq', gs.setqflist, 'git hunk [q]uickfix list (this file)')
+    gmap('n', '<leader>hQ', function() gs.setqflist 'all' end, 'git hunk [Q]uickfix list (whole repo)')
+
+    -- Toggles
+    gmap('n', '<leader>tb', gs.toggle_current_line_blame, '[T]oggle git [b]lame line')
+    gmap('n', '<leader>tw', gs.toggle_word_diff, '[T]oggle git intra-line [w]ord diff')
+
+    -- Text object: `ih` = "in hunk", so `dih` discards a hunk, `vih` selects one.
+    gmap({ 'o', 'x' }, 'ih', gs.select_hunk, 'git hunk')
+  end,
+}
+
 require('fidget').setup {} -- LSP progress in the corner
 
 -- Popup listing what can follow a half-typed key sequence. Groups below just give
@@ -155,6 +193,7 @@ require('which-key').setup {
   spec = {
     { '<leader>s', group = '[S]earch', mode = { 'n', 'x' } },
     { '<leader>t', group = '[T]oggle' },
+    { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'x' } },
     { 'gr', group = 'LSP Actions' },
   },
 }
