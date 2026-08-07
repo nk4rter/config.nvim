@@ -33,7 +33,7 @@ vim.o.splitbelow = true
 vim.o.signcolumn = 'yes'
 vim.o.cursorline = true
 vim.o.showmode = false -- already in the statusline
-vim.o.winborder = 'none'
+-- vim.o.winborder = 'none'
 vim.opt.colorcolumn = { 121 }
 vim.o.list = true
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
@@ -122,6 +122,7 @@ vim.pack.add {
   gh 'mason-org/mason.nvim',
   gh 'mason-org/mason-lspconfig.nvim',
   gh 'rluba/jai.vim',
+  gh 'folke/which-key.nvim',
   { src = gh 'saghen/blink.cmp',                version = vim.version.range '1.*' },
   { src = gh 'nvim-treesitter/nvim-treesitter', version = 'main' },
 }
@@ -145,6 +146,18 @@ require('guess-indent').setup {}
 
 require('gitsigns').setup {}
 require('fidget').setup {} -- LSP progress in the corner
+
+-- Popup listing what can follow a half-typed key sequence. Groups below just give
+-- the prefixes a readable label; every other entry comes from the keymap `desc`s.
+require('which-key').setup {
+  delay = 0,
+  icons = { mappings = vim.g.have_nerd_font },
+  spec = {
+    { '<leader>s', group = '[S]earch', mode = { 'n', 'x' } },
+    { '<leader>t', group = '[T]oggle' },
+    { 'gr', group = 'LSP Actions' },
+  },
+}
 require('lualine').setup { options = { theme = 'powerline' } }
 
 require('oil').setup {
