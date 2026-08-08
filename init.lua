@@ -122,6 +122,7 @@ vim.pack.add {
   gh 'mason-org/mason-lspconfig.nvim',
   gh 'rluba/jai.vim',
   gh 'folke/which-key.nvim',
+  gh 'folke/todo-comments.nvim',
   { src = gh 'saghen/blink.cmp',                version = vim.version.range '1.*' },
   { src = gh 'nvim-treesitter/nvim-treesitter', version = 'main' },
 }
@@ -132,11 +133,17 @@ vim.o.termguicolors = true
 vim.cmd.colorscheme 'gruvbox'
 
 -- [[ mini.nvim modules ]]
-require('mini.icons').setup()
+-- `require` returns the same table each module publishes as a global in `setup()`;
+-- binding it locally keeps lua_ls from flagging `MiniPick` & co. as undefined globals.
+local MiniIcons = require 'mini.icons'
+MiniIcons.setup()
 MiniIcons.mock_nvim_web_devicons()
-require('mini.surround').setup()           -- saiw) sd' sr)'
-require('mini.ai').setup { n_lines = 500 } -- va) ci' yi]
-require('mini.pick').setup {
+require('mini.surround').setup() -- saiw) sd' sr)'
+-- va) ci' yi] -- `aa`/`ii` instead of the default `an`/`in`, which would shadow
+-- Neovim's builtin incremental selection (`:help treesitter-incremental-selection`).
+require('mini.ai').setup { mappings = { around_next = 'aa', inside_next = 'ii' }, n_lines = 500 }
+local MiniPick = require 'mini.pick'
+MiniPick.setup {
   window = {
     config = function()
       local SCALE = 0.75
@@ -151,7 +158,8 @@ require('mini.pick').setup {
     end,
   },
 }
-require('mini.extra').setup() -- extra pickers, registered into :Pick
+local MiniExtra = require 'mini.extra'
+MiniExtra.setup() -- extra pickers, registered into :Pick
 vim.ui.select = MiniPick.ui_select
 
 -- Detect a file's indentation on open and override the defaults above.
@@ -196,7 +204,8 @@ require('gitsigns').setup {
   end,
 }
 
-require('fidget').setup {} -- LSP progress in the corner
+require('fidget').setup {}                       -- LSP progress in the corner
+require('todo-comments').setup { signs = false } -- highlight TODO/FIXME/HACK/NOTE in comments
 
 -- Popup listing what can follow a half-typed key sequence. Groups below just give
 -- the prefixes a readable label; every other entry comes from the keymap `desc`s.
@@ -383,16 +392,26 @@ require('blink.cmp').setup {
 local ts = require 'nvim-treesitter'
 ts.install { 'bash', 'c', 'cpp', 'diff', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' }
 
+local ts_available = ts.get_available()
+
+local function ts_attach(buf, lang)
+  if not vim.treesitter.language.add(lang) then return end
+  vim.treesitter.start(buf, lang)
+  if vim.treesitter.query.get(lang, 'indents') then
+    vim.bo[buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+  end
+end
+
 vim.api.nvim_create_autocmd('FileType', {
-  desc = 'Enable treesitter highlighting and indentation',
+  desc = 'Enable treesitter highlighting and indentation, installing the parser on demand',
   callback = function(args)
     local lang = vim.treesitter.language.get_lang(args.match)
-    if not lang or not vim.treesitter.language.add(lang) then return end
-    vim.treesitter.start(args.buf, lang)
-    if vim.treesitter.query.get(lang, 'indents') then
-      vim.bo[args.buf].indentexpr =
-      "v:lua.require'nvim-treesitter'.indentexpr()"
+    if not lang then return end
+    -- Not installed but nvim-treesitter knows about it: fetch it, then attach when done.
+    if not vim.tbl_contains(ts.get_installed 'parsers', lang) and vim.tbl_contains(ts_available, lang) then
+      return ts.install(lang):await(function() ts_attach(args.buf, lang) end)
     end
+    ts_attach(args.buf, lang)
   end,
 })
 
