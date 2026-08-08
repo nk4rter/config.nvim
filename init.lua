@@ -136,8 +136,22 @@ require('mini.icons').setup()
 MiniIcons.mock_nvim_web_devicons()
 require('mini.surround').setup()           -- saiw) sd' sr)'
 require('mini.ai').setup { n_lines = 500 } -- va) ci' yi]
-require('mini.pick').setup()
-require('mini.extra').setup()              -- extra pickers, registered into :Pick
+require('mini.pick').setup {
+  window = {
+    config = function()
+      local SCALE = 0.75
+      local height, width = math.floor(SCALE * vim.o.lines), math.floor(SCALE * vim.o.columns)
+      return {
+        anchor = 'NW',
+        height = height,
+        width = width,
+        row = math.floor(0.5 * (vim.o.lines - height)),
+        col = math.floor(0.5 * (vim.o.columns - width)),
+      }
+    end,
+  },
+}
+require('mini.extra').setup() -- extra pickers, registered into :Pick
 vim.ui.select = MiniPick.ui_select
 
 -- Detect a file's indentation on open and override the defaults above.
