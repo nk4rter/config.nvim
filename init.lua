@@ -28,9 +28,8 @@ vim.o.signcolumn = 'yes'
 vim.o.cursorline = true
 vim.o.showmode = false
 vim.o.winborder = 'rounded'
-vim.opt.colorcolumn = { 121 }
 vim.o.list = true
-vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
+vim.opt.listchars = { space = '·', tab = '» ', trail = '·', nbsp = '␣' }
 
 vim.o.mouse = 'a'
 vim.o.whichwrap = '<,>,h,l'
@@ -110,6 +109,8 @@ vim.pack.add {
   gh 'j-hui/fidget.nvim',
   gh 'folke/which-key.nvim',
   gh 'folke/todo-comments.nvim',
+  gh 'lukas-reineke/virt-column.nvim',
+  gh 'lukas-reineke/indent-blankline.nvim',
   gh 'neovim/nvim-lspconfig',
   gh 'mason-org/mason.nvim',
   gh 'mason-org/mason-lspconfig.nvim',
@@ -198,6 +199,9 @@ require('gitsigns').setup {
 require('fidget').setup()
 
 require('todo-comments').setup { signs = false }
+
+require('virt-column').setup { char = '│', virtcolumn = '121' }
+require('ibl').setup { indent = { char = '│' } }
 
 require('which-key').setup {
   icons = { mappings = vim.g.have_nerd_font },
