@@ -390,7 +390,6 @@ require('blink.cmp').setup {
 -- ============================================================
 
 local ts = require 'nvim-treesitter'
-ts.install { 'bash', 'c', 'cpp', 'diff', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' }
 
 local ts_available = ts.get_available()
 
