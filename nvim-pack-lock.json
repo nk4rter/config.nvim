@@ -21,10 +21,6 @@
       "rev": "84a4987ff36798c2fc1169cbaff67960aed9776f",
       "src": "https://github.com/NMAC427/guess-indent.nvim"
     },
-    "jai.vim": {
-      "rev": "591aa0a75e9bb859028248b65a1a38d46b8d8576",
-      "src": "https://github.com/rluba/jai.vim"
-    },
     "lualine.nvim": {
       "rev": "221ce6b2d999187044529f49da6554a92f740a96",
       "src": "https://github.com/nvim-lualine/lualine.nvim"
@@ -47,8 +43,7 @@
     },
     "nvim-treesitter": {
       "rev": "7b6cc8949f9999c5ed91436cbe24aa5f99c42025",
-      "src": "https://github.com/nvim-treesitter/nvim-treesitter",
-      "version": "'main'"
+      "src": "https://github.com/nvim-treesitter/nvim-treesitter"
     },
     "oil.nvim": {
       "rev": "b73018b75affd13fa38e2fc94ef753b465f770d7",

@@ -1,9 +1,6 @@
--- Minimal Neovim config: options, LSP (clangd), completion, treesitter,
--- mini.pick for fuzzy finding + ripgrep, oil for file browsing.
--- Plugins are managed by the built-in `vim.pack` (`:help vim.pack`).
---   inspect: :lua vim.pack.update(nil, { offline = true })
---   update:  :lua vim.pack.update()
---   remove:  :lua vim.pack.del { 'name' }
+-- inspect: :lua vim.pack.update(nil, { offline = true })
+-- update:  :lua vim.pack.update()
+-- delete:  :lua vim.pack.del { 'name' }
 
 vim.loader.enable()
 
@@ -11,16 +8,14 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 vim.g.have_nerd_font = true
 
--- ============================================================
--- OPTIONS
--- ============================================================
+----- Options
 
 vim.o.number = true
 vim.o.relativenumber = true
 vim.o.wrap = false
 vim.o.swapfile = false
 vim.o.undofile = true
-vim.o.confirm = true -- ask to save instead of failing on :q with changes
+vim.o.confirm = true
 
 vim.o.tabstop = 4
 vim.o.shiftwidth = 4
@@ -31,7 +26,7 @@ vim.o.splitbelow = true
 
 vim.o.signcolumn = 'yes'
 vim.o.cursorline = true
-vim.o.showmode = false -- already in the statusline
+vim.o.showmode = false
 vim.o.winborder = 'rounded'
 vim.opt.colorcolumn = { 121 }
 vim.o.list = true
@@ -42,17 +37,14 @@ vim.o.whichwrap = '<,>,h,l'
 
 vim.o.ignorecase = true
 vim.o.smartcase = true
-vim.o.inccommand = 'split' -- live preview of :s
+vim.o.inccommand = 'nosplit'
 
 vim.o.updatetime = 250
 vim.o.timeoutlen = 300
 
--- Deferred: reading the OS clipboard costs startup time.
 vim.schedule(function() vim.o.clipboard = 'unnamedplus' end)
 
--- ============================================================
--- BASIC KEYMAPS & AUTOCMDS
--- ============================================================
+----- Basic
 
 local map = vim.keymap.set
 
@@ -61,7 +53,10 @@ map('n', '<leader>w', '<cmd>write<CR>', { desc = '[W]rite file' })
 map('n', '<leader>1', '<cmd>set relativenumber!<CR>', { desc = 'Toggle relative numbers' })
 map('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
--- NOTE: <C-hjkl> window navigation is provided by vim-tmux-navigator below.
+map('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
+map('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
+map('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
+map('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
 vim.api.nvim_create_autocmd('TextYankPost', {
   desc = 'Highlight when yanking text',
@@ -83,7 +78,6 @@ vim.diagnostic.config {
       [vim.diagnostic.severity.INFO] = '',
     },
   } or true,
-  -- Show the message when jumping with [d / ]d
   jump = {
     on_jump = function(_, bufnr) vim.diagnostic.open_float { bufnr = bufnr, scope = 'cursor', focus = false } end,
   },
@@ -91,13 +85,10 @@ vim.diagnostic.config {
 
 map('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Diagnostic [Q]uickfix list' })
 
--- ============================================================
--- PLUGINS
--- ============================================================
+----- Plugins
 
 local function gh(repo) return 'https://github.com/' .. repo end
 
--- Build steps that must run after a plugin is installed/updated.
 vim.api.nvim_create_autocmd('PackChanged', {
   callback = function(ev)
     if ev.data.kind ~= 'install' and ev.data.kind ~= 'update' then return end
@@ -117,31 +108,32 @@ vim.pack.add {
   gh 'nvim-lualine/lualine.nvim',
   gh 'christoomey/vim-tmux-navigator',
   gh 'j-hui/fidget.nvim',
+  gh 'folke/which-key.nvim',
+  gh 'folke/todo-comments.nvim',
   gh 'neovim/nvim-lspconfig',
   gh 'mason-org/mason.nvim',
   gh 'mason-org/mason-lspconfig.nvim',
-  gh 'rluba/jai.vim',
-  gh 'folke/which-key.nvim',
-  gh 'folke/todo-comments.nvim',
-  { src = gh 'saghen/blink.cmp',                version = vim.version.range '1.*' },
-  { src = gh 'nvim-treesitter/nvim-treesitter', version = 'main' },
+  gh 'nvim-treesitter/nvim-treesitter',
+  { src = gh 'saghen/blink.cmp', version = vim.version.range '1.*' },
 }
 
--- [[ Colorscheme ]]
 vim.o.background = 'dark'
 vim.o.termguicolors = true
 vim.cmd.colorscheme 'gruvbox'
 
--- [[ mini.nvim modules ]]
--- `require` returns the same table each module publishes as a global in `setup()`;
--- binding it locally keeps lua_ls from flagging `MiniPick` & co. as undefined globals.
 local MiniIcons = require 'mini.icons'
+
 MiniIcons.setup()
 MiniIcons.mock_nvim_web_devicons()
-require('mini.surround').setup() -- saiw) sd' sr)'
--- va) ci' yi] -- `aa`/`ii` instead of the default `an`/`in`, which would shadow
--- Neovim's builtin incremental selection (`:help treesitter-incremental-selection`).
+
+-- saiw) sd' sr)'
+require('mini.surround').setup()
+
+-- va) ci' yi]
+-- `aa`/`ii` instead of the default `an`/`in`
+-- See `:help treesitter-incremental-selection`.
 require('mini.ai').setup { mappings = { around_next = 'aa', inside_next = 'ii' }, n_lines = 500 }
+
 local MiniPick = require 'mini.pick'
 MiniPick.setup {
   window = {
@@ -158,15 +150,14 @@ MiniPick.setup {
     end,
   },
 }
+
 local MiniExtra = require 'mini.extra'
-MiniExtra.setup() -- extra pickers, registered into :Pick
+MiniExtra.setup()
+
 vim.ui.select = MiniPick.ui_select
 
--- Detect a file's indentation on open and override the defaults above.
-require('guess-indent').setup {}
+require('guess-indent').setup()
 
--- Git signs in the gutter, plus hunk staging/reset/preview under `<leader>h`.
--- Keymaps are buffer-local so they only exist in files gitsigns actually attached to.
 require('gitsigns').setup {
   on_attach = function(bufnr)
     local gs = require 'gitsigns'
@@ -204,11 +195,10 @@ require('gitsigns').setup {
   end,
 }
 
-require('fidget').setup {}                       -- LSP progress in the corner
-require('todo-comments').setup { signs = false } -- highlight TODO/FIXME/HACK/NOTE in comments
+require('fidget').setup()
 
--- Popup listing what can follow a half-typed key sequence. Groups below just give
--- the prefixes a readable label; every other entry comes from the keymap `desc`s.
+require('todo-comments').setup { signs = false }
+
 require('which-key').setup {
   icons = { mappings = vim.g.have_nerd_font },
   spec = {
@@ -218,29 +208,26 @@ require('which-key').setup {
     { 'gr',        group = 'LSP Actions' },
   },
 }
+
 require('lualine').setup { options = { theme = 'powerline' } }
 
 require('oil').setup {
   view_options = { show_hidden = true },
 }
-map('n', '<leader>e', '<cmd>Oil<CR>', { desc = 'File [E]xplorer (oil)' })
-map('n', '-', '<cmd>Oil<CR>', { desc = 'Open parent directory (oil)' })
+map('n', '<leader>e', '<cmd>Oil<CR>', { desc = 'File [E]xplorer' })
+map('n', '-', '<cmd>Oil<CR>', { desc = 'Open parent directory' })
 
--- ============================================================
--- PICKERS (mini.pick + mini.extra)
--- ============================================================
+----- Pickers
 
 local pick = MiniPick.builtin
 local extra = MiniExtra.pickers
 
----Text to seed a search with: visual selection in visual mode, else <cword>.
 local function search_seed()
   local mode = vim.fn.mode()
   if not mode:match '[vV\22]' then return vim.fn.expand '<cword>' end
   return vim.fn.getregion(vim.fn.getpos '.', vim.fn.getpos 'v', { type = mode })[1]
 end
 
----Paths of listed, on-disk buffers, relative to cwd (used as ripgrep globs).
 local function open_file_globs()
   local globs = {}
   for _, buf in ipairs(vim.api.nvim_list_bufs()) do
@@ -258,15 +245,13 @@ map('n', '<leader>sf', pick.files, { desc = '[S]earch [F]iles' })
 map('n', '<leader>sg', pick.grep_live, { desc = '[S]earch by [G]rep' })
 map('n', '<leader>sh', pick.help, { desc = '[S]earch [H]elp' })
 map('n', '<leader>sr', pick.resume, { desc = '[S]earch [R]esume' })
-map('n', '<leader><leader>', pick.buffers, { desc = '[ ] Find existing buffers' })
+map('n', '<leader><leader>', pick.buffers, { desc = '[ ] Find Existing Buffers' })
 map({ 'n', 'x' }, '<leader>sw', function() pick.grep { pattern = search_seed() } end,
-  { desc = '[S]earch current [W]ord' })
+  { desc = '[S]earch current [W]ord' }) -- TODO: Used as regex, sometimes breaks with v
 map('n', '<leader>s/', function() pick.grep_live { globs = open_file_globs() } end,
-  { desc = '[S]earch [/] in open files' })
+  { desc = '[S]earch [/] in Open Files' })
 map('n', '<leader>sk', extra.keymaps, { desc = '[S]earch [K]eymaps' })
 map('n', '<leader>sc', extra.commands, { desc = '[S]earch [C]ommands' })
--- `scope = 'current'` limits this to the current buffer; the default 'all' also picks up
--- diagnostics the LSP published for files that were never opened (headers, other TUs).
 map('n', '<leader>sd', function() extra.diagnostic { scope = 'current' } end, { desc = '[S]earch [D]iagnostics' })
 map('n', '<leader>s.', extra.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
 map('n', '<leader>/', function() extra.buf_lines { scope = 'current' } end,
@@ -274,7 +259,6 @@ map('n', '<leader>/', function() extra.buf_lines { scope = 'current' } end,
 map('n', '<leader>sn', function() pick.files(nil, { source = { cwd = vim.fn.stdpath 'config' } }) end,
   { desc = '[S]earch [N]eovim config files' })
 
--- Pick a picker (like Telescope's builtin picker).
 map('n', '<leader>ss', function()
   local names = vim.tbl_keys(MiniPick.registry)
   table.sort(names)
@@ -287,9 +271,7 @@ map('n', '<leader>ss', function()
   }
 end, { desc = '[S]earch [S]elect picker' })
 
--- ============================================================
--- LSP
--- ============================================================
+----- LSP
 
 vim.api.nvim_create_autocmd('LspAttach', {
   group = vim.api.nvim_create_augroup('lsp-attach', { clear = true }),
@@ -312,7 +294,6 @@ vim.api.nvim_create_autocmd('LspAttach', {
 
     local client = vim.lsp.get_client_by_id(event.data.client_id)
 
-    -- Highlight other references to the symbol under the cursor.
     if client and client:supports_method('textDocument/documentHighlight', event.buf) then
       local group = vim.api.nvim_create_augroup('lsp-highlight', { clear = false })
       vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
@@ -359,10 +340,10 @@ local servers = {
   },
 }
 
-require('mason').setup {}
+require('mason').setup()
 require('mason-lspconfig').setup {
   ensure_installed = vim.tbl_keys(servers),
-  automatic_enable = false, -- servers are enabled explicitly below
+  automatic_enable = false,
 }
 
 for name, config in pairs(servers) do
@@ -370,9 +351,7 @@ for name, config in pairs(servers) do
 end
 vim.lsp.enable(vim.tbl_keys(servers))
 
--- ============================================================
--- AUTOCOMPLETE
--- ============================================================
+----- Completion
 
 require('blink.cmp').setup {
   -- <c-y> accept, <c-n>/<c-p> select, <c-space> menu/docs, <c-e> hide, <c-k> signature.
@@ -385,9 +364,7 @@ require('blink.cmp').setup {
   signature = { enabled = true },
 }
 
--- ============================================================
--- TREESITTER
--- ============================================================
+----- Treesitter
 
 local ts = require 'nvim-treesitter'
 
@@ -406,7 +383,6 @@ vim.api.nvim_create_autocmd('FileType', {
   callback = function(args)
     local lang = vim.treesitter.language.get_lang(args.match)
     if not lang then return end
-    -- Not installed but nvim-treesitter knows about it: fetch it, then attach when done.
     if not vim.tbl_contains(ts.get_installed 'parsers', lang) and vim.tbl_contains(ts_available, lang) then
       return ts.install(lang):await(function() ts_attach(args.buf, lang) end)
     end
