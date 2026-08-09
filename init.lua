@@ -172,23 +172,23 @@ require('gitsigns').setup {
     end, 'Jump to previous git [c]hange')
 
     -- Actions
-    gmap('x', '<leader>hs', function() gs.stage_hunk { vim.fn.line '.', vim.fn.line 'v' } end, 'git [s]tage hunk')
-    gmap('x', '<leader>hr', function() gs.reset_hunk { vim.fn.line '.', vim.fn.line 'v' } end, 'git [r]eset hunk')
-    gmap('n', '<leader>hs', gs.stage_hunk, 'git [s]tage hunk')
-    gmap('n', '<leader>hr', gs.reset_hunk, 'git [r]eset hunk')
+    gmap('x', '<leader>hs', function() gs.stage_hunk { vim.fn.line '.', vim.fn.line 'v' } end, 'git [S]tage hunk')
+    gmap('x', '<leader>hr', function() gs.reset_hunk { vim.fn.line '.', vim.fn.line 'v' } end, 'git [R]eset hunk')
+    gmap('n', '<leader>hs', gs.stage_hunk, 'git [S]tage hunk')
+    gmap('n', '<leader>hr', gs.reset_hunk, 'git [R]eset hunk')
     gmap('n', '<leader>hS', gs.stage_buffer, 'git [S]tage buffer')
     gmap('n', '<leader>hR', gs.reset_buffer, 'git [R]eset buffer')
-    gmap('n', '<leader>hp', gs.preview_hunk, 'git [p]review hunk')
-    gmap('n', '<leader>hi', gs.preview_hunk_inline, 'git preview hunk [i]nline')
-    gmap('n', '<leader>hb', function() gs.blame_line { full = true } end, 'git [b]lame line')
-    gmap('n', '<leader>hd', gs.diffthis, 'git [d]iff against index')
+    gmap('n', '<leader>hp', gs.preview_hunk, 'git [P]review hunk')
+    gmap('n', '<leader>hi', gs.preview_hunk_inline, 'git preview hunk [I]nline')
+    gmap('n', '<leader>hb', function() gs.blame_line { full = true } end, 'git [B]lame line')
+    gmap('n', '<leader>hd', gs.diffthis, 'git [D]iff against index')
     gmap('n', '<leader>hD', function() gs.diffthis '@' end, 'git [D]iff against last commit')
-    gmap('n', '<leader>hq', gs.setqflist, 'git hunk [q]uickfix list (this file)')
+    gmap('n', '<leader>hq', gs.setqflist, 'git hunk [Q]uickfix list (this file)')
     gmap('n', '<leader>hQ', function() gs.setqflist 'all' end, 'git hunk [Q]uickfix list (whole repo)')
 
     -- Toggles
-    gmap('n', '<leader>tb', gs.toggle_current_line_blame, '[T]oggle git [b]lame line')
-    gmap('n', '<leader>tw', gs.toggle_word_diff, '[T]oggle git intra-line [w]ord diff')
+    gmap('n', '<leader>tb', gs.toggle_current_line_blame, '[T]oggle git [B]lame line')
+    gmap('n', '<leader>tw', gs.toggle_word_diff, '[T]oggle git intra-line [W]ord diff')
 
     -- Text object: `ih` = "in hunk", so `dih` discards a hunk, `vih` selects one.
     gmap({ 'o', 'x' }, 'ih', gs.select_hunk, 'git hunk')
@@ -251,11 +251,11 @@ map('n', '<leader><leader>', pick.buffers, { desc = '[ ] Find Existing Buffers' 
 map({ 'n', 'x' }, '<leader>sw', function() pick.grep { pattern = search_seed(), method = 'plain' } end,
   { desc = '[S]earch current [W]ord' })
 map('n', '<leader>s/', function() pick.grep_live { globs = open_file_globs() } end,
-  { desc = '[S]earch [/] in Open Files' })
+  { desc = '[S]earch [/] in open files' })
 map('n', '<leader>sk', extra.keymaps, { desc = '[S]earch [K]eymaps' })
 map('n', '<leader>sc', extra.commands, { desc = '[S]earch [C]ommands' })
 map('n', '<leader>sd', function() extra.diagnostic { scope = 'current' } end, { desc = '[S]earch [D]iagnostics' })
-map('n', '<leader>s.', extra.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
+map('n', '<leader>s.', extra.oldfiles, { desc = '[S]earch recent files ("." for repeat)' })
 map('n', '<leader>/', function() extra.buf_lines { scope = 'current' } end,
   { desc = '[/] Fuzzily search in current buffer' })
 map('n', '<leader>sn', function() pick.files(nil, { source = { cwd = vim.fn.stdpath 'config' } }) end,
@@ -289,9 +289,8 @@ vim.api.nvim_create_autocmd('LspAttach', {
     bmap('grr', function() extra.lsp { scope = 'references' } end, '[G]oto [R]eferences')
     bmap('gri', function() extra.lsp { scope = 'implementation' } end, '[G]oto [I]mplementation')
     bmap('grt', vim.lsp.buf.type_definition, '[G]oto [T]ype Definition')
-    bmap('gO', function() extra.lsp { scope = 'document_symbol' } end, '[O]pen Document Symbols')
-
-    bmap('gW', function() extra.lsp { scope = 'workspace_symbol_live' } end, 'Workspace Symbols')
+    bmap('gO', function() extra.lsp { scope = 'document_symbol' } end, '[O]pen document symbols')
+    bmap('gW', function() extra.lsp { scope = 'workspace_symbol_live' } end, '[W]orkspace symbols')
     bmap('<leader>f', function() vim.lsp.buf.format { async = true } end, '[F]ormat buffer', { 'n', 'x' })
 
     local client = vim.lsp.get_client_by_id(event.data.client_id)
