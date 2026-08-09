@@ -222,9 +222,11 @@ map('n', '-', '<cmd>Oil<CR>', { desc = 'Open parent directory' })
 local pick = MiniPick.builtin
 local extra = MiniExtra.pickers
 
+local VISUAL_MODES = { v = true, V = true, ['\22'] = true }
+
 local function search_seed()
   local mode = vim.fn.mode()
-  if not mode:match '[vV\22]' then return vim.fn.expand '<cword>' end
+  if not VISUAL_MODES[mode] then return vim.fn.expand '<cword>' end
   return vim.fn.getregion(vim.fn.getpos '.', vim.fn.getpos 'v', { type = mode })[1]
 end
 
@@ -246,8 +248,8 @@ map('n', '<leader>sg', pick.grep_live, { desc = '[S]earch by [G]rep' })
 map('n', '<leader>sh', pick.help, { desc = '[S]earch [H]elp' })
 map('n', '<leader>sr', pick.resume, { desc = '[S]earch [R]esume' })
 map('n', '<leader><leader>', pick.buffers, { desc = '[ ] Find Existing Buffers' })
-map({ 'n', 'x' }, '<leader>sw', function() pick.grep { pattern = search_seed() } end,
-  { desc = '[S]earch current [W]ord' }) -- TODO: Used as regex, sometimes breaks with v
+map({ 'n', 'x' }, '<leader>sw', function() pick.grep { pattern = search_seed(), method = 'plain' } end,
+  { desc = '[S]earch current [W]ord' })
 map('n', '<leader>s/', function() pick.grep_live { globs = open_file_globs() } end,
   { desc = '[S]earch [/] in Open Files' })
 map('n', '<leader>sk', extra.keymaps, { desc = '[S]earch [K]eymaps' })
