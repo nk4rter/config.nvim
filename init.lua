@@ -275,6 +275,24 @@ end, { desc = '[S]earch [S]elect picker' })
 
 ----- LSP
 
+local function lsp_goto(scope)
+  return function()
+    local buf_method = vim.lsp.buf[scope]
+    vim.lsp.buf[scope] = function(a, b)
+      vim.lsp.buf[scope] = buf_method
+      local opts = b or a
+      local start_picker = opts.on_list
+      opts.on_list = function(args)
+        if #args.items > 1 then return start_picker(args) end
+        local item = args.items[1]
+        MiniPick.default_choose { path = item.filename, lnum = item.lnum, col = item.col }
+      end
+      return buf_method(a, b)
+    end
+    extra.lsp { scope = scope }
+  end
+end
+
 vim.api.nvim_create_autocmd('LspAttach', {
   group = vim.api.nvim_create_augroup('lsp-attach', { clear = true }),
   callback = function(event)
@@ -284,11 +302,11 @@ vim.api.nvim_create_autocmd('LspAttach', {
 
     bmap('grn', vim.lsp.buf.rename, '[R]e[n]ame')
     bmap('gra', vim.lsp.buf.code_action, 'Code [A]ction', { 'n', 'x' })
-    bmap('grD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
-    bmap('grd', vim.lsp.buf.definition, '[G]oto [D]efinition')
-    bmap('grr', function() extra.lsp { scope = 'references' } end, '[G]oto [R]eferences')
-    bmap('gri', function() extra.lsp { scope = 'implementation' } end, '[G]oto [I]mplementation')
-    bmap('grt', vim.lsp.buf.type_definition, '[G]oto [T]ype Definition')
+    bmap('grD', lsp_goto 'declaration', '[G]oto [D]eclaration')
+    bmap('grd', lsp_goto 'definition', '[G]oto [D]efinition')
+    bmap('grr', lsp_goto 'references', '[G]oto [R]eferences')
+    bmap('gri', lsp_goto 'implementation', '[G]oto [I]mplementation')
+    bmap('grt', lsp_goto 'type_definition', '[G]oto [T]ype Definition')
     bmap('gO', function() extra.lsp { scope = 'document_symbol' } end, '[O]pen document symbols')
     bmap('gW', function() extra.lsp { scope = 'workspace_symbol_live' } end, '[W]orkspace symbols')
     bmap('<leader>f', function() vim.lsp.buf.format { async = true } end, '[F]ormat buffer', { 'n', 'x' })
