@@ -224,7 +224,7 @@ map('n', '-', '<cmd>Oil<CR>', { desc = 'Open parent directory' })
 ----- Pickers
 
 local pick = MiniPick.builtin
-local extra = MiniExtra.pickers
+local pickx = MiniExtra.pickers
 
 local VISUAL_MODES = { v = true, V = true, ['\22'] = true }
 
@@ -256,11 +256,11 @@ map({ 'n', 'x' }, '<leader>sw', function() pick.grep { pattern = search_seed(), 
   { desc = '[S]earch current [W]ord' })
 map('n', '<leader>s/', function() pick.grep_live { globs = open_file_globs() } end,
   { desc = '[S]earch [/] in open files' })
-map('n', '<leader>sk', extra.keymaps, { desc = '[S]earch [K]eymaps' })
-map('n', '<leader>sc', extra.commands, { desc = '[S]earch [C]ommands' })
-map('n', '<leader>sd', function() extra.diagnostic { scope = 'current' } end, { desc = '[S]earch [D]iagnostics' })
-map('n', '<leader>s.', extra.oldfiles, { desc = '[S]earch recent files ("." for repeat)' })
-map('n', '<leader>/', function() extra.buf_lines { scope = 'current' } end,
+map('n', '<leader>sk', pickx.keymaps, { desc = '[S]earch [K]eymaps' })
+map('n', '<leader>sc', pickx.commands, { desc = '[S]earch [C]ommands' })
+map('n', '<leader>sd', function() pickx.diagnostic { scope = 'current' } end, { desc = '[S]earch [D]iagnostics' })
+map('n', '<leader>s.', pickx.oldfiles, { desc = '[S]earch recent files ("." for repeat)' })
+map('n', '<leader>/', function() pickx.buf_lines { scope = 'current' } end,
   { desc = '[/] Fuzzily search in current buffer' })
 map('n', '<leader>sn', function() pick.files(nil, { source = { cwd = vim.fn.stdpath 'config' } }) end,
   { desc = '[S]earch [N]eovim config files' })
@@ -293,7 +293,7 @@ local function lsp_goto(scope)
       end
       return buf_method(a, b)
     end
-    extra.lsp { scope = scope }
+    pickx.lsp { scope = scope }
   end
 end
 
@@ -311,8 +311,8 @@ vim.api.nvim_create_autocmd('LspAttach', {
     bmap('grr', lsp_goto 'references', '[G]oto [R]eferences')
     bmap('gri', lsp_goto 'implementation', '[G]oto [I]mplementation')
     bmap('grt', lsp_goto 'type_definition', '[G]oto [T]ype Definition')
-    bmap('gO', function() extra.lsp { scope = 'document_symbol' } end, '[O]pen document symbols')
-    bmap('gW', function() extra.lsp { scope = 'workspace_symbol_live' } end, '[W]orkspace symbols')
+    bmap('gO', function() pickx.lsp { scope = 'document_symbol' } end, '[O]pen document symbols')
+    bmap('gW', function() pickx.lsp { scope = 'workspace_symbol_live' } end, '[W]orkspace symbols')
     bmap('<leader>f', function() vim.lsp.buf.format { async = true } end, '[F]ormat buffer', { 'n', 'x' })
 
     local client = vim.lsp.get_client_by_id(event.data.client_id)
