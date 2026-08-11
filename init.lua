@@ -31,6 +31,11 @@ vim.o.winborder = 'rounded'
 vim.o.list = true
 vim.opt.listchars = { space = '·', tab = '» ', trail = '·', nbsp = '␣' }
 
+vim.o.foldmethod = 'expr'
+vim.o.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
+vim.o.foldlevelstart = 99
+vim.o.foldnestmax = 4
+
 vim.o.mouse = 'a'
 vim.o.whichwrap = '<,>,h,l'
 
@@ -56,6 +61,8 @@ map('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
 map('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
 map('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 map('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+
+map('n', '<leader>z', function() vim.wo.foldlevel = vim.wo.foldlevel > 0 and 0 or 99 end, { desc = 'Toggle all folds' })
 
 vim.api.nvim_create_autocmd('TextYankPost', {
   desc = 'Highlight when yanking text',
