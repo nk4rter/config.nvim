@@ -58,11 +58,6 @@ map('n', '<leader>w', '<cmd>write<CR>', { desc = '[W]rite file' })
 map('n', '<leader>1', '<cmd>set relativenumber!<CR>', { desc = 'Toggle relative numbers' })
 map('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
-map('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
-map('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-map('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
-map('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
-
 map('n', '<leader>z', function() vim.wo.foldlevel = vim.wo.foldlevel > 0 and 0 or 99 end, { desc = 'Toggle all folds' })
 
 vim.api.nvim_create_autocmd('TextYankPost', {
@@ -113,7 +108,7 @@ vim.pack.add {
   gh 'stevearc/oil.nvim',
   gh 'lewis6991/gitsigns.nvim',
   gh 'nvim-lualine/lualine.nvim',
-  gh 'christoomey/vim-tmux-navigator',
+  gh 'alexghergh/nvim-tmux-navigation',
   gh 'j-hui/fidget.nvim',
   gh 'folke/which-key.nvim',
   gh 'folke/todo-comments.nvim',
@@ -222,6 +217,19 @@ require('which-key').setup {
 }
 
 require('lualine').setup { options = { theme = 'powerline' } }
+
+local tmux_nav = require('nvim-tmux-navigation')
+
+tmux_nav.setup {
+  disable_when_zoomed = true
+}
+
+map('n', "<C-h>", tmux_nav.NvimTmuxNavigateLeft, { desc = 'Move focus to the left window' })
+map('n', "<C-j>", tmux_nav.NvimTmuxNavigateDown, { desc = 'Move focus to the lower window' })
+map('n', "<C-k>", tmux_nav.NvimTmuxNavigateUp, { desc = 'Move focus to the upper window' })
+map('n', "<C-l>", tmux_nav.NvimTmuxNavigateRight, { desc = 'Move focus to the right window' })
+map('n', "<C-\\>", tmux_nav.NvimTmuxNavigateLastActive, { desc = 'Move focus to the last active window' })
+map('n', "<C-Space>", tmux_nav.NvimTmuxNavigateNext, { desc = 'Move focus to the next window' })
 
 require('oil').setup {
   view_options = { show_hidden = true },
