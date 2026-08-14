@@ -1,6 +1,7 @@
 -- inspect: :lua vim.pack.update(nil, { offline = true })
 -- update:  :lua vim.pack.update()
 -- delete:  :lua vim.pack.del { 'name' }
+-- unused:  :lua =vim.iter(vim.pack.get()):map(function(p) return not p.active and p.spec.name or nil end):totable()
 
 vim.loader.enable()
 
