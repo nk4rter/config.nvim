@@ -105,6 +105,9 @@ vim.pack.add {
   gh 'ellisonleao/gruvbox.nvim',
   gh 'NMAC427/guess-indent.nvim',
   gh 'nvim-mini/mini.nvim',
+  gh 'nvim-lua/plenary.nvim',
+  gh 'nvim-telescope/telescope.nvim',
+  gh 'nvim-telescope/telescope-ui-select.nvim',
   gh 'stevearc/oil.nvim',
   gh 'lewis6991/gitsigns.nvim',
   gh 'nvim-lualine/lualine.nvim',
@@ -138,27 +141,18 @@ require('mini.surround').setup()
 -- See `:help treesitter-incremental-selection`.
 require('mini.ai').setup { mappings = { around_next = 'aa', inside_next = 'ii' }, n_lines = 500 }
 
-local MiniPick = require 'mini.pick'
-MiniPick.setup {
-  window = {
-    config = function()
-      local SCALE = 0.75
-      local height, width = math.floor(SCALE * vim.o.lines), math.floor(SCALE * vim.o.columns)
-      return {
-        anchor = 'NW',
-        height = height,
-        width = width,
-        row = math.floor(0.5 * (vim.o.lines - height)),
-        col = math.floor(0.5 * (vim.o.columns - width)),
-      }
-    end,
+local telescope = require 'telescope'
+local refine = require('telescope.actions').to_fuzzy_refine
+
+telescope.setup {
+  defaults = {
+    mappings = {
+      i = { ['<C-Space>'] = refine },
+      n = { ['<C-Space>'] = refine },
+    },
   },
 }
-
-local MiniExtra = require 'mini.extra'
-MiniExtra.setup()
-
-vim.ui.select = MiniPick.ui_select
+telescope.load_extension 'ui-select'
 
 require('guess-indent').setup()
 
@@ -239,8 +233,7 @@ map('n', '-', '<cmd>Oil<CR>', { desc = 'Open parent directory' })
 
 ----- Pickers
 
-local pick = MiniPick.builtin
-local pickx = MiniExtra.pickers
+local pick = require 'telescope.builtin'
 
 local VISUAL_MODES = { v = true, V = true, ['\22'] = true }
 
@@ -250,68 +243,39 @@ local function search_seed()
   return vim.fn.getregion(vim.fn.getpos '.', vim.fn.getpos 'v', { type = mode })[1]
 end
 
-local function open_file_globs()
-  local globs = {}
+local function open_files()
+  local files = {}
   for _, buf in ipairs(vim.api.nvim_list_bufs()) do
     local name = vim.api.nvim_buf_get_name(buf)
     if vim.bo[buf].buflisted and name ~= '' and vim.uv.fs_stat(name) then
-      table.insert(globs,
+      table.insert(files,
         vim.fn.fnamemodify(name, ':.'))
     end
   end
-  return globs
+  return files
 end
 
-map('n', '<C-p>', pick.files, { desc = 'Search Files' })
-map('n', '<leader>sf', pick.files, { desc = '[S]earch [F]iles' })
-map('n', '<leader>sg', pick.grep_live, { desc = '[S]earch by [G]rep' })
-map('n', '<leader>sh', pick.help, { desc = '[S]earch [H]elp' })
+map('n', '<C-p>', pick.find_files, { desc = 'Search Files' })
+map('n', '<leader>sf', pick.find_files, { desc = '[S]earch [F]iles' })
+map('n', '<leader>sg', pick.live_grep, { desc = '[S]earch by [G]rep' })
+map('n', '<leader>sh', pick.help_tags, { desc = '[S]earch [H]elp' })
 map('n', '<leader>sr', pick.resume, { desc = '[S]earch [R]esume' })
 map('n', '<leader><leader>', pick.buffers, { desc = '[ ] Find Existing Buffers' })
-map({ 'n', 'x' }, '<leader>sw', function() pick.grep { pattern = search_seed(), method = 'plain' } end,
+map({ 'n', 'x' }, '<leader>sw', function() pick.grep_string { search = search_seed() } end,
   { desc = '[S]earch current [W]ord' })
-map('n', '<leader>s/', function() pick.grep_live { globs = open_file_globs() } end,
+map('n', '<leader>s/', function() pick.live_grep { search_dirs = open_files() } end,
   { desc = '[S]earch [/] in open files' })
-map('n', '<leader>sk', pickx.keymaps, { desc = '[S]earch [K]eymaps' })
-map('n', '<leader>sc', pickx.commands, { desc = '[S]earch [C]ommands' })
-map('n', '<leader>sd', function() pickx.diagnostic { scope = 'current' } end, { desc = '[S]earch [D]iagnostics' })
-map('n', '<leader>s.', pickx.oldfiles, { desc = '[S]earch recent files ("." for repeat)' })
-map('n', '<leader>/', function() pickx.buf_lines { scope = 'current' } end,
-  { desc = '[/] Fuzzily search in current buffer' })
-map('n', '<leader>sn', function() pick.files(nil, { source = { cwd = vim.fn.stdpath 'config' } }) end,
+map('n', '<leader>sk', pick.keymaps, { desc = '[S]earch [K]eymaps' })
+map('n', '<leader>sc', pick.commands, { desc = '[S]earch [C]ommands' })
+map('n', '<leader>sd', function() pick.diagnostics { bufnr = 0 } end, { desc = '[S]earch [D]iagnostics' })
+map('n', '<leader>s.', pick.oldfiles, { desc = '[S]earch recent files ("." for repeat)' })
+map('n', '<leader>/', pick.current_buffer_fuzzy_find, { desc = '[/] Fuzzily search in current buffer' })
+map('n', '<leader>sn', function() pick.find_files { cwd = vim.fn.stdpath 'config' } end,
   { desc = '[S]earch [N]eovim config files' })
 
-map('n', '<leader>ss', function()
-  local names = vim.tbl_keys(MiniPick.registry)
-  table.sort(names)
-  MiniPick.start {
-    source = {
-      items = names,
-      name = 'Pickers',
-      choose = function(name) vim.schedule(function() MiniPick.registry[name]() end) end,
-    },
-  }
-end, { desc = '[S]earch [S]elect picker' })
+map('n', '<leader>ss', pick.builtin, { desc = '[S]earch [S]elect picker' })
 
 ----- LSP
-
-local function lsp_goto(scope)
-  return function()
-    local buf_method = vim.lsp.buf[scope]
-    vim.lsp.buf[scope] = function(a, b)
-      vim.lsp.buf[scope] = buf_method
-      local opts = b or a
-      local start_picker = opts.on_list
-      opts.on_list = function(args)
-        if #args.items > 1 then return start_picker(args) end
-        local item = args.items[1]
-        MiniPick.default_choose { path = item.filename, lnum = item.lnum, col = item.col }
-      end
-      return buf_method(a, b)
-    end
-    pickx.lsp { scope = scope }
-  end
-end
 
 vim.api.nvim_create_autocmd('LspAttach', {
   group = vim.api.nvim_create_augroup('lsp-attach', { clear = true }),
@@ -322,13 +286,13 @@ vim.api.nvim_create_autocmd('LspAttach', {
 
     bmap('grn', vim.lsp.buf.rename, '[R]e[n]ame')
     bmap('gra', vim.lsp.buf.code_action, 'Code [A]ction', { 'n', 'x' })
-    bmap('grD', lsp_goto 'declaration', '[G]oto [D]eclaration')
-    bmap('grd', lsp_goto 'definition', '[G]oto [D]efinition')
-    bmap('grr', lsp_goto 'references', '[G]oto [R]eferences')
-    bmap('gri', lsp_goto 'implementation', '[G]oto [I]mplementation')
-    bmap('grt', lsp_goto 'type_definition', '[G]oto [T]ype Definition')
-    bmap('gO', function() pickx.lsp { scope = 'document_symbol' } end, '[O]pen document symbols')
-    bmap('gW', function() pickx.lsp { scope = 'workspace_symbol_live' } end, '[W]orkspace symbols')
+    bmap('grD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
+    bmap('grd', pick.lsp_definitions, '[G]oto [D]efinition')
+    bmap('grr', pick.lsp_references, '[G]oto [R]eferences')
+    bmap('gri', pick.lsp_implementations, '[G]oto [I]mplementation')
+    bmap('grt', pick.lsp_type_definitions, '[G]oto [T]ype Definition')
+    bmap('gO', pick.lsp_document_symbols, '[O]pen document symbols')
+    bmap('gW', pick.lsp_dynamic_workspace_symbols, '[W]orkspace symbols')
     bmap('<leader>f', function() vim.lsp.buf.format { async = true } end, '[F]ormat buffer', { 'n', 'x' })
 
     local client = vim.lsp.get_client_by_id(event.data.client_id)
