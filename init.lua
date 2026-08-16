@@ -60,6 +60,7 @@ map('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
 map('n', '<leader>tr', '<cmd>set relativenumber!<CR>', { desc = '[T]oggle [R]elative numbers' })
 map('n', '<leader>tl', '<cmd>set list!<CR>', { desc = '[T]oggle [L]ist characters' })
+map('n', '<leader>ts', function() vim.o.scrolloff = vim.o.scrolloff > 0 and 0 or 8 end, { desc = '[T]oggle [S]crolloff' })
 
 map('n', '<leader>z', function() vim.wo.foldlevel = vim.wo.foldlevel > 0 and 0 or 99 end, { desc = 'Toggle all folds' })
 
