@@ -27,6 +27,7 @@ vim.o.splitbelow = true
 
 vim.o.signcolumn = 'yes'
 vim.o.cursorline = true
+vim.o.scrolloff = 8
 vim.o.showmode = false
 vim.o.winborder = 'rounded'
 vim.o.list = true
@@ -55,8 +56,10 @@ local map = vim.keymap.set
 
 map('n', '<Esc>', '<cmd>nohlsearch<CR>')
 map('n', '<leader>w', '<cmd>write<CR>', { desc = '[W]rite file' })
-map('n', '<leader>1', '<cmd>set relativenumber!<CR>', { desc = 'Toggle relative numbers' })
 map('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
+
+map('n', '<leader>tr', '<cmd>set relativenumber!<CR>', { desc = '[T]oggle [R]elative numbers' })
+map('n', '<leader>tl', '<cmd>set list!<CR>', { desc = '[T]oggle [L]ist characters' })
 
 map('n', '<leader>z', function() vim.wo.foldlevel = vim.wo.foldlevel > 0 and 0 or 99 end, { desc = 'Toggle all folds' })
 
