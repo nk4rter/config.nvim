@@ -36,7 +36,7 @@ vim.opt.listchars = { space = '·', tab = '» ', trail = '·', nbsp = '␣' }
 vim.o.foldmethod = 'expr'
 vim.o.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
 vim.o.foldlevelstart = 99
-vim.o.foldnestmax = 4
+if vim.o.foldnestmax ~= 4 then vim.o.foldnestmax = 4 end
 
 vim.o.mouse = 'a'
 vim.o.whichwrap = '<,>,h,l'
@@ -96,6 +96,7 @@ map('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Diagnostic [Q]uickfix
 local function gh(repo) return 'https://github.com/' .. repo end
 
 vim.api.nvim_create_autocmd('PackChanged', {
+  group = vim.api.nvim_create_augroup('pack-changed', { clear = true }),
   callback = function(ev)
     if ev.data.kind ~= 'install' and ev.data.kind ~= 'update' then return end
     if ev.data.spec.name == 'nvim-treesitter' then
@@ -209,15 +210,17 @@ require('todo-comments').setup { signs = false }
 require('virt-column').setup { char = '│', virtcolumn = '121' }
 require('ibl').setup { indent = { char = '│' } }
 
-require('which-key').setup {
-  icons = { mappings = vim.g.have_nerd_font },
-  spec = {
-    { '<leader>s', group = '[S]earch',   mode = { 'n', 'x' } },
-    { '<leader>t', group = '[T]oggle' },
-    { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'x' } },
-    { 'gr',        group = 'LSP Actions' },
-  },
-}
+if not require('which-key.config').loaded then
+  require('which-key').setup {
+    icons = { mappings = vim.g.have_nerd_font },
+    spec = {
+      { '<leader>s', group = '[S]earch',   mode = { 'n', 'x' } },
+      { '<leader>t', group = '[T]oggle' },
+      { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'x' } },
+      { 'gr',        group = 'LSP Actions' },
+    },
+  }
+end
 
 require('lualine').setup { options = { theme = 'powerline' } }
 
@@ -353,11 +356,15 @@ local servers = {
   },
 }
 
-require('mason').setup()
-require('mason-lspconfig').setup {
-  ensure_installed = vim.tbl_keys(servers),
-  automatic_enable = false,
-}
+if not require('mason').has_setup then require('mason').setup() end
+
+if not vim.g.mason_lspconfig_did_setup then
+  vim.g.mason_lspconfig_did_setup = true
+  require('mason-lspconfig').setup {
+    ensure_installed = vim.tbl_keys(servers),
+    automatic_enable = false,
+  }
+end
 
 for name, config in pairs(servers) do
   vim.lsp.config(name, config)
@@ -393,6 +400,7 @@ local function ts_attach(buf, lang)
 end
 
 vim.api.nvim_create_autocmd('FileType', {
+  group = vim.api.nvim_create_augroup('treesitter-attach', { clear = true }),
   desc = 'Enable treesitter highlighting and indentation, installing the parser on demand',
   callback = function(args)
     local lang = vim.treesitter.language.get_lang(args.match)
