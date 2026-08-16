@@ -48,6 +48,8 @@ vim.o.inccommand = 'nosplit'
 vim.o.updatetime = 250
 vim.o.timeoutlen = 300
 
+vim.o.exrc = true
+
 vim.schedule(function() vim.o.clipboard = 'unnamedplus' end)
 
 ----- Basic
