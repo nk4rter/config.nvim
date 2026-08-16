@@ -97,6 +97,8 @@ vim.api.nvim_create_autocmd('PackChanged', {
     if ev.data.spec.name == 'nvim-treesitter' then
       if not ev.data.active then vim.cmd.packadd 'nvim-treesitter' end
       vim.cmd 'TSUpdate'
+    elseif ev.data.spec.name == 'telescope-fzf-native.nvim' then
+      vim.system({ 'make' }, { cwd = ev.data.path }):wait()
     end
   end,
 })
@@ -108,6 +110,8 @@ vim.pack.add {
   gh 'nvim-lua/plenary.nvim',
   gh 'nvim-telescope/telescope.nvim',
   gh 'nvim-telescope/telescope-ui-select.nvim',
+  gh 'nvim-telescope/telescope-fzf-native.nvim',
+  gh 'rafamadriz/friendly-snippets',
   gh 'stevearc/oil.nvim',
   gh 'lewis6991/gitsigns.nvim',
   gh 'nvim-lualine/lualine.nvim',
@@ -153,6 +157,7 @@ telescope.setup {
   },
 }
 telescope.load_extension 'ui-select'
+telescope.load_extension 'fzf'
 
 require('guess-indent').setup()
 
@@ -277,6 +282,8 @@ map('n', '<leader>ss', pick.builtin, { desc = '[S]earch [S]elect picker' })
 
 ----- LSP
 
+local lsp_highlight_group = vim.api.nvim_create_augroup('lsp-highlight', { clear = false })
+
 vim.api.nvim_create_autocmd('LspAttach', {
   group = vim.api.nvim_create_augroup('lsp-attach', { clear = true }),
   callback = function(event)
@@ -298,15 +305,14 @@ vim.api.nvim_create_autocmd('LspAttach', {
     local client = vim.lsp.get_client_by_id(event.data.client_id)
 
     if client and client:supports_method('textDocument/documentHighlight', event.buf) then
-      local group = vim.api.nvim_create_augroup('lsp-highlight', { clear = false })
       vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
         buffer = event.buf,
-        group = group,
+        group = lsp_highlight_group,
         callback = vim.lsp.buf.document_highlight,
       })
       vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
         buffer = event.buf,
-        group = group,
+        group = lsp_highlight_group,
         callback = vim.lsp.buf.clear_references,
       })
     end
@@ -322,8 +328,8 @@ vim.api.nvim_create_autocmd('LspAttach', {
 vim.api.nvim_create_autocmd('LspDetach', {
   group = vim.api.nvim_create_augroup('lsp-detach', { clear = true }),
   callback = function(event)
-    vim.lsp.buf.clear_references()
-    vim.api.nvim_clear_autocmds { group = 'lsp-highlight', buffer = event.buf }
+    vim.lsp.util.buf_clear_references(event.buf)
+    vim.api.nvim_clear_autocmds { group = lsp_highlight_group, buffer = event.buf }
   end,
 })
 
@@ -374,6 +380,7 @@ local ts = require 'nvim-treesitter'
 local ts_available = ts.get_available()
 
 local function ts_attach(buf, lang)
+  if not vim.api.nvim_buf_is_valid(buf) then return end
   if not vim.treesitter.language.add(lang) then return end
   vim.treesitter.start(buf, lang)
   if vim.treesitter.query.get(lang, 'indents') then
