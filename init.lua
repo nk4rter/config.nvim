@@ -392,6 +392,12 @@ local servers = {
   },
 }
 
+vim.lsp.config('*', {
+  root_dir = function(bufnr, on_dir)
+    if vim.api.nvim_buf_get_name(bufnr) ~= '' then on_dir() end
+  end,
+})
+
 if not require('mason').has_setup then require('mason').setup() end
 
 if not vim.g.mason_lspconfig_did_setup then
