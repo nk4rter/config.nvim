@@ -69,7 +69,7 @@ map('n', '<leader>z', function() vim.wo.foldlevel = vim.wo.foldlevel > 0 and 0 o
 vim.api.nvim_create_autocmd('TextYankPost', {
   desc = 'Highlight when yanking text',
   group = vim.api.nvim_create_augroup('highlight-yank', { clear = true }),
-  callback = function() vim.hl.on_yank() end,
+  callback = function() (vim.hl.hl_op or vim.hl.on_yank)() end,
 })
 
 vim.diagnostic.config {
